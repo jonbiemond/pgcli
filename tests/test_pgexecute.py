@@ -585,6 +585,33 @@ def test_short_host(executor):
         assert executor.short_host == "localhost1"
 
 
+@dbtest
+def test_crosstabview(executor):
+    statement = (
+        "WITH t AS (\n"
+        "    SELECT * FROM (VALUES\n"
+        "       ('v1','h2','foo'),\n"
+        "       ('v2','h1','bar'),\n"
+        "       ('v1','h0','baz'),\n"
+        "       ('v0','h4','qux')\n"
+        "    ) AS l(v,h,c)\n"
+        ")\n"
+        r"SELECT * FROM t \crosstabview"
+    )
+    results = run(executor, statement)
+    expected = [
+        "+----+-----+-----+-----+-----+",
+        "| v  | h2  | h1  | h0  | h4  |",
+        "|----+-----+-----+-----+-----|",
+        "| v1 | foo |     | baz |     |",
+        "| v2 |     | bar |     |     |",
+        "| v0 |     |     |     | qux |",
+        "+----+-----+-----+-----+-----+",
+        "SELECT 4",
+    ]
+    assert list(results) == expected
+
+
 class VirtualCursor:
     """Mock a cursor to virtual database like pgbouncer."""
 
